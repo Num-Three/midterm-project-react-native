@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
 import uuid from 'react-native-uuid'; // ✅ Import UUID for unique IDs
 
 interface Job {
@@ -23,19 +24,26 @@ interface Job {
 interface GlobalContextProps {
     jobs: Job[];
     savedJobs: Job[];
+    appliedJobs: Job[];
     fetchJobs: () => void;
-    saveJob: (job: Job) => void;
-    removeJob: (jobId: string) => void;
     loading: boolean;
+    saveJob: (job: Job) => void;
+    applyJob: (job: Job) => void;
+    removeJob: (jobId: string) => void;
+    isDarkMode: boolean;
+    toggleDarkMode: () => void;
 }
 
 const GlobalContext = createContext<GlobalContextProps | undefined>(undefined);
 
+
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [savedJobs, setSavedJobs] = useState<Job[]>([]);
+    const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-
+    const [isDarkMode, setIsDarkMode] = useState(useColorScheme() === 'dark');
+    const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
     const fetchJobs = async () => {
         try {
             const response = await fetch('https://empllo.com/api/v1');
@@ -77,6 +85,13 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    const applyJob = (job: Job) => {
+        setAppliedJobs((prevJobs) => {
+            if (prevJobs.some((appliedJob) => appliedJob.id === job.id)) return prevJobs;
+            return [...prevJobs, job];
+        });
+    };
+
     const removeJob = (jobId: string) => {
         setSavedJobs((prevJobs) => prevJobs.filter((job) => job.id !== jobId));
     };
@@ -86,7 +101,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     return (
-        <GlobalContext.Provider value={{ jobs, savedJobs, fetchJobs, saveJob, removeJob, loading }}>
+        <GlobalContext.Provider value={{ jobs, savedJobs, appliedJobs, fetchJobs, loading, applyJob, saveJob, removeJob, isDarkMode, toggleDarkMode }}>
             {children}
         </GlobalContext.Provider>
     );
