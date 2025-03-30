@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, ScrollView, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, ScrollView, useWindowDimensions, ActivityIndicator, Alert } from 'react-native';
 import { useGlobalContext } from '../context/GlobalContext';
 import { Props } from '../navigation/props';
 import Header from '../components/Header';
@@ -18,33 +18,36 @@ const JobTags = ({ tags, isDarkMode }) => {
     return (
         <View>
             <View style={styles.tagContainer}>
-                 {displayedTags.map((tag, index) => (
-                <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{toTitleCase(tag)}</Text>
-                </View>
-            ))}
+                {displayedTags.map((tag, index) => (
+                    <View key={index} style={styles.tag}>
+                        <Text style={styles.tagText}>{toTitleCase(tag)}</Text>
+                    </View>
+                ))}
             </View>
             {tags.length > 5 && (
                 <TouchableOpacity onPress={() => setShowAll(!showAll)}>
                     <Text style={[styles.expandText]}>{showAll ? 'Show Less' : 'Show All Tags...'}</Text>
                 </TouchableOpacity>
             )}
-            
+
         </View>
     );
 };
 
 const JobFinder: React.FC<Props> = ({ navigation }) => {
-    const { jobs, savedJobs, appliedJobs, saveJob, applyJob, isDarkMode } = useGlobalContext();
-    const [searchQuery, setSearchQuery] = useState('');
+    const { jobs, savedJobs, appliedJobs, saveJob, isDarkMode } = useGlobalContext();
+    const [searchResult, setSearchResult] = useState('');
     const [selectedJob, setSelectedJob] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const styles = getGlobalStyles(isDarkMode);
     const [isExpanded, setIsExpanded] = useState(false);
     const { width } = useWindowDimensions();
 
+    const searchToLower = searchResult.toLowerCase();
     const filteredJobs = jobs.filter(job =>
-        job.title.toLowerCase().includes(searchQuery.toLowerCase())
+        job.title.toLowerCase().includes(searchToLower) ||
+        job.companyName.toLowerCase().includes(searchToLower) ||
+        job.tags.some(tag => tag.toLowerCase().includes(searchToLower))
     );
 
     const openModal = (job) => {
@@ -60,22 +63,23 @@ const JobFinder: React.FC<Props> = ({ navigation }) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <TouchableOpacity onPress={() => navigation.navigate('SavedJobs')} style={styles.savedJobsButton}>
-                    <Text style={styles.savedJobsText}>Saved Jobs</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('SavedJobs')} style={[styles.button, { padding: 4 }]}>
+                    <Text style={styles.saveButtonText}>Saved Jobs</Text>
                 </TouchableOpacity>
             ),
         });
     }, [navigation, isDarkMode]);
 
-    if (!jobs || jobs.length === 0) { return <ActivityIndicator/> }
+    if (!jobs || jobs.length === 0) { return <ActivityIndicator /> }
 
     return (
         <View style={styles.container}>
             <Header />
             <TextInput
-                placeholder="Search jobs..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
+                placeholder="Search jobs by job title, company, or tag"
+                placeholderTextColor={isDarkMode ? '#ddd' : '#000'}
+                value={searchResult}
+                onChangeText={setSearchResult}
                 style={styles.input}
             />
             <FlatList
@@ -87,7 +91,7 @@ const JobFinder: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.jobTitle}>{item.title}</Text>
                             <Text style={styles.text}>{item.companyName}</Text>
                             <Text style={styles.salaryText}>
-                                {item.minSalary === 0 ? "Flexible Salary" : `${formatCurrency(item.minSalary)} - ${formatCurrency(item.maxSalary)}`}
+                                {item.minSalary === 0 ? "Salary not listed" : `${formatCurrency(item.minSalary)} - ${formatCurrency(item.maxSalary)}`}
                             </Text>
 
                             {/* Tags Section */}
@@ -95,7 +99,7 @@ const JobFinder: React.FC<Props> = ({ navigation }) => {
                                 <JobTags tags={item.tags} isDarkMode={isDarkMode} />
                             )}
                         </View>
-                        
+
                     </TouchableOpacity>
 
                 )}
@@ -109,7 +113,7 @@ const JobFinder: React.FC<Props> = ({ navigation }) => {
                             <>
                                 <Text style={styles.modalTitle}>{selectedJob.title}</Text>
                                 <Text style={styles.text}>{selectedJob.companyName}</Text>
-                                <Text style={styles.salaryText}>{selectedJob.minSalary === 0 ? "Flexible Salary" : `${formatCurrency(selectedJob.minSalary)} - ${formatCurrency(selectedJob.maxSalary)}`}</Text>
+                                <Text style={styles.salaryText}>{selectedJob.minSalary === 0 ? "Salary not listed" : `${formatCurrency(selectedJob.minSalary)} - ${formatCurrency(selectedJob.maxSalary)}`}</Text>
                                 <ScrollView
                                     style={[styles.descriptionBox, isExpanded ? styles.expanded : styles.collapsed]}
                                     nestedScrollEnabled={true}
@@ -121,11 +125,24 @@ const JobFinder: React.FC<Props> = ({ navigation }) => {
                                 <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)}>
                                     <Text style={styles.expandText}>{isExpanded ? "Show Less" : "Read More"}</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => saveJob(selectedJob)}>
-                                    <Text style={[styles.button, styles.saveButton, styles.saveButtonText]}>{savedJobs.some(job => job.id === selectedJob.id) ? 'Saved' : 'Save Job'}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => navigation.navigate('ApplicationForm', { job: selectedJob })}>
-                                    <Text style={styles.button}>{appliedJobs.some(job => job.id === selectedJob.id) ? 'Applied' : 'Apply Job'}</Text>
+                                <TouchableOpacity onPress={() => {
+                                    if (appliedJobs.some(job => job.id === selectedJob.id)) {
+                                        Alert.alert('You have already sent an application form to this position!')
+                                    } else {
+                                        closeModal();
+                                        navigation.navigate('ApplicationForm', { job: selectedJob });
+                                    }
+                                }
+                                }>
+                                    <Text style={[
+                                        styles.button,
+                                        appliedJobs.some(job => job.id === selectedJob.id)
+                                            ? styles.applied
+                                            : styles.closeButtonText
+                                    ]}>{appliedJobs.some(job => job.id === selectedJob.id) ? 'Sent Application' : 'Apply Job'}</Text>
+                                    <TouchableOpacity onPress={() => saveJob(selectedJob)}>
+                                        <Text style={[styles.button, styles.saveButton, styles.saveButtonText]}>{savedJobs.some(job => job.id === selectedJob.id) ? 'Saved' : 'Save Job'}</Text>
+                                    </TouchableOpacity>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={closeModal}>
                                     <Text style={[styles.button, styles.closeButton, styles.closeButtonText]}>Close</Text>

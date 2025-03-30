@@ -31,22 +31,18 @@ export const getGlobalStyles = (isDarkMode) =>
       marginBottom: 10,
       borderRadius: 5,
     },
-    placeholderTextColor: {
-      color: isDarkMode ? '#aaa' : '#666',
-    },
     button: {
       padding: 10,
       backgroundColor: isDarkMode ? '#444' : '#007bff',
       borderRadius: 5,
       alignItems: 'center',
       marginTop: 10,
-      color: '#fff',
-      fontWeight: 'bold',
     },
     jobItem: {
       padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#666' : '#ccc',
+      backgroundColor: isDarkMode ? '#242424' : '#eee',
+      borderRadius: 12,
+      marginBottom: 15,
     },
     header: {
       padding: 15,
@@ -98,12 +94,12 @@ export const getGlobalStyles = (isDarkMode) =>
       fontWeight: 'bold',
     },
     saveText: {
-      color: isDarkMode ? '#4CAF50' : 'green', // Save Job text color
+      color: isDarkMode ? '#4CAF50' : 'green',
       fontWeight: 'bold',
       marginBottom: 10,
     },
     applyText: {
-      color: isDarkMode ? '#2196F3' : 'blue', // Apply text color
+      color: isDarkMode ? '#2196F3' : 'blue',
       fontWeight: 'bold',
       marginBottom: 10,
     },
@@ -115,31 +111,26 @@ export const getGlobalStyles = (isDarkMode) =>
     descriptionContainer: {
       marginTop: 10,
     },
-
     descriptionBox: {
       paddingLeft: 10,
       borderRadius: 5,
       backgroundColor: isDarkMode ? '#888' : '#fff',
     },
-
     collapsed: {
-      maxHeight: 80, // Only show a small portion initially
+      maxHeight: 80,
       overflow: 'hidden',
     },
-
     expanded: {
-      maxHeight: 200, // Expands but within a limit
+      maxHeight: 200,
     },
-
     tagContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 6, // Ensures dynamic spacing
+      gap: 6,
       marginTop: 5,
     },
-
     tag: {
-      backgroundColor: '#007bff', // Customize for dark/light mode
+      backgroundColor: '#007bff',
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: 15,
@@ -147,13 +138,11 @@ export const getGlobalStyles = (isDarkMode) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
-
     tagText: {
       color: '#fff',
       fontSize: 14,
       fontWeight: 'bold',
     },
-
     expandText: {
       color: '#007bff',
       fontSize: 14,
@@ -161,4 +150,29 @@ export const getGlobalStyles = (isDarkMode) =>
       marginLeft: 10,
       marginTop: 10,
     },
+    formInput: {
+      padding: 10,
+      backgroundColor: isDarkMode ? '#242424' : '#eee',
+      borderRadius: 12,
+      color: isDarkMode ? '#ffffff' : '#000000',
+    },
+    formLabel: {
+      paddingLeft: 2,
+      marginTop: 10,
+      marginBottom: 4,
+      fontSize: 16,
+      fontWeight: '600',
+      color: isDarkMode ? '#ffffff' : '#000000',
+    },
+    error: {
+      color: 'red',
+      fontStyle: 'italic',
+    },
+    applied: {
+      backgroundColor: '#ddd',
+      color: '#505050'
+    },
+    navBar: {
+      backgroundColor: isDarkMode ? '#fff' : '#464646',
+    }
   });
